@@ -1,0 +1,56 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}Brands{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">Brands</p>
+        <h1>Brand Directory</h1>
+        <p class="lead">Find a brand and open its LCD products.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'LCD:lcd_list' %}">Home</a>
+        <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+    </div>
+</section>
+
+<section class="panel toolbar">
+    <form class="search-form" method="get">
+        {% csrf_token %}
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search brand by title or slug" aria-label="Search brand">
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    {% if request.GET.q %}
+        <a class="btn btn-muted" href="{% url 'LCD:brand_list' %}">Clear</a>
+    {% endif %}
+</section>
+
+{% if brand %}
+    <section class="grid" aria-label="Brand list">
+        {% for b in brand %}
+            <article class="brand-card">
+                <div>
+                    <p class="eyebrow">Brand</p>
+                    <h2 class="card-title">
+                        <a href="{% url 'LCD:brand_detail' b.slug %}">{{ b.title }}</a>
+                    </h2>
+                    <p class="muted">{{ b.slug }}</p>
+                </div>
+                <div class="actions">
+                    <a class="btn btn-primary" href="{% url 'LCD:brand_detail' b.slug %}">View Products</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="panel empty-state">
+        <h2>No brands found</h2>
+        <p>Clear the search or create LCD products with brand data from the existing form.</p>
+        <div class="actions">
+            <a class="btn" href="{% url 'LCD:brand_list' %}">Back to Brands</a>
+            <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

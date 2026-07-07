@@ -1,0 +1,89 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}LCD Inventory{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">Inventory</p>
+        <h1>LCD Products</h1>
+        <p class="lead">Browse stock, check prices, and open each LCD record for selling, editing, or deleting.</p>
+    </div>
+    <div class="actions">
+        <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+        <a class="btn" href="{% url 'LCD:brand_list' %}">View Brands</a>
+    </div>
+</section>
+
+<section class="stat-strip" aria-label="Inventory summary">
+    <div class="panel stat">
+        <span>Wallet Balance</span>
+        <strong>{{ wallet.balance|default:"0" }}</strong>
+    </div>
+    <div class="panel stat">
+        <span>total lcd quantity</span>
+        <strong>{{ total_quantity }}</strong>
+    </div>
+    <div class="panel stat">
+        <span>Search</span>
+        <strong>{% if request.GET.q %}Active{% else %}All Items{% endif %}</strong>
+    </div>
+</section>
+
+<section class="panel toolbar">
+    <form class="search-form" method="get">
+        {% csrf_token %}
+        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search LCD by title or slug" aria-label="Search LCD">
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    {% if request.GET.q %}
+        <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">Clear</a>
+    {% endif %}
+</section>
+
+{% if lcd %}
+    <section class="grid" aria-label="LCD list">
+        {% for l in lcd %}
+            <article class="product-card">
+                <div class="card-top">
+                    <div>
+                        <h2 class="card-title">
+                            <a href="{% url 'LCD:lcd_detail' l.slug %}">{{ l.title }}</a>
+                        </h2>
+                        <p class="muted">{{ l.brand|default:"No brand" }}</p>
+                    </div>
+                    <span class="badge {% if l.quantity %}badge-ok{% else %}badge-warn{% endif %}">
+                        Qty {{ l.quantity|default:"0" }}
+                    </span>
+                </div>
+
+                <dl class="meta-list">
+                    <div>
+                        <dt>Buy Price</dt>
+                        <dd>{{ l.buy_price }}</dd>
+                    </div>
+                    <div>
+                        <dt>Sell Price</dt>
+                        <dd>{{ l.sell_price }}</dd>
+                    </div>
+                </dl>
+
+                <div class="actions">
+                    <a class="btn btn-primary" href="{% url 'LCD:lcd_detail' l.slug %}">Details</a>
+                    <a class="btn" href="{% url 'LCD:lcd_update' l.slug %}">Edit</a>
+                    <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' l.slug %}">Delete</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="panel empty-state">
+        <h2>No LCD products found</h2>
+        <p>Create a new LCD item or clear the search to browse all inventory.</p>
+        <div class="actions">
+            <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+            <a class="btn" href="{% url 'LCD:lcd_list' %}">Back Home</a>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}

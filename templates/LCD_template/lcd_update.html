@@ -1,0 +1,38 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}Edit {{ lcd.title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">Edit</p>
+        <h1>Edit {{ lcd.title }}</h1>
+        <p class="lead">Update product details and save changes. After saving, the app returns to this product detail page.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'LCD:lcd_detail' lcd.slug %}">Back</a>
+        <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' lcd.slug %}">Delete</a>
+    </div>
+</section>
+
+<section class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text }}</span>
+                {% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div class="actions">
+            <button class="btn btn-primary" type="submit">Save Changes</button>
+            <a class="btn btn-muted" href="{% url 'LCD:lcd_detail' lcd.slug %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}Delete {{ lcd.title }}{% endblock %}
+
+{% block content %}
+<section class="danger-panel">
+    <div class="danger-icon">!</div>
+    <p class="eyebrow">Delete Confirmation</p>
+    <h1>Delete {{ lcd.title }}?</h1>
+    <p class="lead">This confirmation page submits the existing delete action. Use cancel to return to the product detail page.</p>
+
+    <dl class="meta-list">
+        <div>
+            <dt>Brand</dt>
+            <dd>{{ lcd.brand|default:"No brand" }}</dd>
+        </div>
+        <div>
+            <dt>Quantity</dt>
+            <dd>{{ lcd.quantity|default:"0" }}</dd>
+        </div>
+    </dl>
+
+    <form class="actions" method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Delete</button>
+        <a class="btn" href="{% url 'LCD:lcd_detail' lcd.slug %}">Cancel</a>
+        <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">Home</a>
+    </form>
+</section>
+{% endblock %}

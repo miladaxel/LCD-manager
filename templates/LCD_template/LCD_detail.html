@@ -1,0 +1,80 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}{{ lcd.title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">Product Detail</p>
+        <h1>{{ lcd.title }}</h1>
+        <p class="lead">Review product pricing, stock, brand, and the latest update before taking action.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'LCD:lcd_list' %}">Back</a>
+        <a class="btn" href="{% url 'LCD:lcd_update' lcd.slug %}">Edit</a>
+        <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' lcd.slug %}">Delete</a>
+    </div>
+</section>
+
+<section class="detail-layout">
+    <article class="detail-panel">
+        <div class="product-visual" aria-label="LCD preview">
+            <div class="screen-stand"></div>
+            {# TODO: Render a real product image here if an image field is added to the LCD model/context. #}
+        </div>
+
+        <dl class="meta-list">
+            <div>
+                <dt>Buy Price</dt>
+                <dd>{{ lcd.buy_price }}</dd>
+            </div>
+            <div>
+                <dt>Sell Price</dt>
+                <dd>{{ lcd.sell_price }}</dd>
+            </div>
+            <div>
+                <dt>Quantity</dt>
+                <dd>{{ lcd.quantity|default:"0" }}</dd>
+            </div>
+            <div>
+                <dt>Brand</dt>
+                <dd>
+                    {% if lcd.brand %}
+                        <a href="{% url 'LCD:brand_detail' lcd.brand.slug %}">{{ lcd.brand }}</a>
+                    {% else %}
+                        No brand
+                    {% endif %}
+                </dd>
+            </div>
+            <div>
+                <dt>Last Updated</dt>
+                <dd>{{ lcd.updated_at }}</dd>
+            </div>
+            <div>
+                <dt>Slug</dt>
+                <dd>{{ lcd.slug }}</dd>
+            </div>
+        </dl>
+    </article>
+
+    <aside class="side-stack">
+        <section class="panel sell-box">
+            <h2>Sell One Unit</h2>
+            <p class="muted">Submitting this action sells one LCD and returns you to this detail page.</p>
+            <form method="post">
+                {% csrf_token %}
+                <button class="btn btn-primary" type="submit">Sell One</button>
+            </form>
+        </section>
+
+        <section class="panel sell-box">
+            <h2>Quick Navigation</h2>
+            <div class="actions">
+                <a class="btn" href="{% url 'LCD:lcd_list' %}">Home</a>
+                <a class="btn" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+                <a class="btn" href="{% url 'LCD:brand_list' %}">Brands</a>
+            </div>
+        </section>
+    </aside>
+</section>
+{% endblock %}

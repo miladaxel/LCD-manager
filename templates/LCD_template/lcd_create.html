@@ -1,0 +1,38 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}Create LCD{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">Create</p>
+        <h1>Create LCD</h1>
+        <p class="lead">Add a new LCD product to the inventory. After saving, the app returns to the product list.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'LCD:lcd_list' %}">Back</a>
+        <a class="btn" href="{% url 'LCD:brand_list' %}">Brands</a>
+    </div>
+</section>
+
+<section class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text }}</span>
+                {% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div class="actions">
+            <button class="btn btn-primary" type="submit">Save</button>
+            <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

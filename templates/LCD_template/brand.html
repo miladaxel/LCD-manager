@@ -1,0 +1,63 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}{{ brand.title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">Brand</p>
+        <h1>{{ brand.title }}</h1>
+        <p class="lead">LCD products connected to this brand.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'LCD:brand_list' %}">Back</a>
+        <a class="btn" href="{% url 'LCD:lcd_list' %}">Home</a>
+        <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+    </div>
+</section>
+
+{% if lcd %}
+    <section class="grid" aria-label="Brand products">
+        {% for l in lcd %}
+            <article class="product-card">
+                <div class="card-top">
+                    <div>
+                        <h2 class="card-title">
+                            <a href="{% url 'LCD:lcd_detail' l.slug %}">{{ l.title }}</a>
+                        </h2>
+                        <p class="muted">Updated {{ l.updated_at }}</p>
+                    </div>
+                    <span class="badge {% if l.quantity %}badge-ok{% else %}badge-warn{% endif %}">
+                        Qty {{ l.quantity|default:"0" }}
+                    </span>
+                </div>
+
+                <dl class="meta-list">
+                    <div>
+                        <dt>Buy Price</dt>
+                        <dd>{{ l.buy_price }}</dd>
+                    </div>
+                    <div>
+                        <dt>Sell Price</dt>
+                        <dd>{{ l.sell_price }}</dd>
+                    </div>
+                </dl>
+
+                <div class="actions">
+                    <a class="btn btn-primary" href="{% url 'LCD:lcd_detail' l.slug %}">Details</a>
+                    <a class="btn" href="{% url 'LCD:lcd_update' l.slug %}">Edit</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <section class="panel empty-state">
+        <h2>No LCD products for this brand</h2>
+        <p>Add a product and select this brand in the existing LCD form.</p>
+        <div class="actions">
+            <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
+            <a class="btn" href="{% url 'LCD:brand_list' %}">All Brands</a>
+        </div>
+    </section>
+{% endif %}
+{% endblock %}
