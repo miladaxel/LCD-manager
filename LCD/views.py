@@ -15,7 +15,8 @@ class LCDDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        self.object.sell_lcd()
+        quantity = int(self.request.POST.get('quantity'))
+        self.object.sell_lcd(quantity)
         return redirect('LCD:lcd_detail', slug=self.object.slug)
 
 
@@ -36,6 +37,15 @@ class LCDListView(ListView):
         context['wallet'] = Wallet.objects.first()
         context['total_quantity'] = total_quantity
         return context
+
+    def post(self, request, *args, **kwargs):
+        print(request.POST)
+        print(request.POST.get("lcd_slug"))
+        lcd_slug = request.POST.get('lcd_slug')
+        quantity = int(request.POST.get('quantity'))
+        lcd = LCD.objects.get(slug=lcd_slug)
+        lcd.sell_lcd(quantity)
+        return redirect('LCD:lcd_list')
 
 
 

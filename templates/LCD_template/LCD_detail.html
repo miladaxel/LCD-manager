@@ -50,20 +50,17 @@
                 <dt>Last Updated</dt>
                 <dd>{{ lcd.updated_at }}</dd>
             </div>
-            <div>
-                <dt>Slug</dt>
-                <dd>{{ lcd.slug }}</dd>
-            </div>
         </dl>
     </article>
 
     <aside class="side-stack">
         <section class="panel sell-box">
-            <h2>Sell One Unit</h2>
+            <h2>Sell Unit</h2>
             <p class="muted">Submitting this action sells one LCD and returns you to this detail page.</p>
             <form method="post">
                 {% csrf_token %}
-                <button class="btn btn-primary" type="submit">Sell One</button>
+                 <input type="number" name="quantity" value="1" min="1">
+                <button class="btn btn-primary" type="submit">Sell</button>
             </form>
         </section>
 

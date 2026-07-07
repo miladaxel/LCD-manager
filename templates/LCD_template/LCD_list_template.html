@@ -55,6 +55,12 @@
                     <span class="badge {% if l.quantity %}badge-ok{% else %}badge-warn{% endif %}">
                         Qty {{ l.quantity|default:"0" }}
                     </span>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="lcd_slug" value="{{ l.slug }}">
+                        <input type="number" name="quantity" value="1" min="1">
+                        <button type="submit">submit</button>
+                    </form>
                 </div>
 
                 <dl class="meta-list">

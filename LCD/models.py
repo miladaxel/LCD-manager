@@ -31,10 +31,10 @@ class LCD(models.Model):
         verbose_name_plural = 'LCD'
 
 
-    def sell_lcd(self):
+    def sell_lcd(self, quantity=1):
         if self.quantity <= 0:
             raise ValidationError('موجودی کافی نیست')
-        self.quantity = self.quantity - 1
+        self.quantity -= quantity
         self.save()
 
         # wallet = Wallet.objects.first()
