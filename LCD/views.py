@@ -51,7 +51,7 @@ class LCDListView(ListView):
 
 class LCDCreateView(CreateView):
     model = LCD
-    fields = '__all__'
+    fields = ['title', 'brand', 'quantity', 'sell_price', 'buy_price']
     context_object_name = 'lcd'
     template_name = 'LCD_template/lcd_create.html'
     success_url = reverse_lazy('LCD:lcd_list')
@@ -64,7 +64,7 @@ class LCDCreateView(CreateView):
 
 class LCDUpdateView(UpdateView):
     model = LCD
-    fields = '__all__'
+    fields = ['title', 'brand', 'quantity', 'sell_price', 'buy_price']
     context_object_name = 'lcd'
     template_name = 'LCD_template/lcd_update.html'
 
@@ -84,6 +84,14 @@ class BrandDetailView(DetailView):
     slug_url_kwarg = 'slug'
     template_name = 'LCD_template/brand.html'
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        lcd_slug = request.POST.get('lcd_slug')
+        quantity = int(request.POST.get('quantity'))
+        lcd = LCD.objects.get(slug=lcd_slug, brand=self.object)
+        lcd.sell_lcd(quantity)
+        return redirect('LCD:brand_detail', slug=self.object.slug)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['lcd'] = self.object.lcd.all()
@@ -100,3 +108,29 @@ class BrandListView(ListView):
         if query:
             return Brand.objects.filter(Q(title__icontains=query) | Q(slug__icontains=query))
         return Brand.objects.all()
+
+
+class BrandCreateView(CreateView):
+    model = Brand
+    fields = ['title']
+    context_object_name = 'brand'
+    template_name = 'LCD_template/brand_create.html'
+    success_url = reverse_lazy('LCD:brand_list')
+
+
+class BrandUpdateView(UpdateView):
+    model = Brand
+    fields = ['title']
+    context_object_name = 'brand'
+    template_name = 'LCD_template/brand_update.html'
+    def get_success_url(self):
+        return reverse_lazy('LCD:brand_detail', kwargs={'slug': self.object.slug})
+
+
+
+class WalletBalanceUpdateView(UpdateView):
+    model = Wallet
+    fields = ['balance']
+    context_object_name = 'wallet'
+    success_url = reverse_lazy('LCD:lcd_list')
+    template_name = 'LCD/wallet_form.html'

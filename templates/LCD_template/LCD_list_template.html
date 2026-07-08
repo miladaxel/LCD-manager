@@ -3,93 +3,708 @@
 {% block title %}LCD Inventory{% endblock %}
 
 {% block content %}
-<section class="page-head">
-    <div>
-        <p class="eyebrow">Inventory</p>
-        <h1>LCD Products</h1>
-        <p class="lead">Browse stock, check prices, and open each LCD record for selling, editing, or deleting.</p>
-    </div>
-    <div class="actions">
-        <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
-        <a class="btn" href="{% url 'LCD:brand_list' %}">View Brands</a>
-    </div>
-</section>
+<style>
+    .lcd-dashboard {
+        display: grid;
+        gap: 14px;
+        color: #e5e7eb;
+    }
 
-<section class="stat-strip" aria-label="Inventory summary">
-    <div class="panel stat">
-        <span>Wallet Balance</span>
-        <strong>{{ wallet.balance|default:"0" }}</strong>
-    </div>
-    <div class="panel stat">
-        <span>total lcd quantity</span>
-        <strong>{{ total_quantity }}</strong>
-    </div>
-    <div class="panel stat">
-        <span>Search</span>
-        <strong>{% if request.GET.q %}Active{% else %}All Items{% endif %}</strong>
-    </div>
-</section>
+    .lcd-page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 4px 0 2px;
+    }
 
-<section class="panel toolbar">
-    <form class="search-form" method="get">
-        {% csrf_token %}
-        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search LCD by title or slug" aria-label="Search LCD">
-        <button class="btn btn-primary" type="submit">Search</button>
-    </form>
-    {% if request.GET.q %}
-        <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">Clear</a>
+    .lcd-kicker {
+        margin: 0 0 5px;
+        color: #60a5fa;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .lcd-page-header h1 {
+        margin: 0;
+        color: #f8fafc;
+        font-size: clamp(1.65rem, 3vw, 2.45rem);
+        line-height: 1.05;
+    }
+
+    .lcd-subtitle {
+        margin: 7px 0 0;
+        max-width: 620px;
+        color: #94a3b8;
+        font-size: 0.92rem;
+    }
+
+    .lcd-header-actions,
+    .lcd-row-actions,
+    .lcd-filter-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .lcd-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .lcd-summary-card,
+    .lcd-toolbar,
+    .lcd-list-shell,
+    .lcd-empty {
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.74);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+    }
+
+    .lcd-summary-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 78px;
+        padding: 14px;
+    }
+
+    .lcd-summary-label {
+        display: block;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+
+    .lcd-summary-value {
+        display: block;
+        margin-top: 4px;
+        color: #f8fafc;
+        font-size: 1.32rem;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    .lcd-summary-icon {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        border: 1px solid rgba(59, 130, 246, 0.38);
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.12);
+        color: #93c5fd;
+    }
+
+    .lcd-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .lcd-search-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .lcd-search-box {
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    .lcd-search-box svg {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        width: 16px;
+        height: 16px;
+        color: #64748b;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+
+    .lcd-search-box input,
+    .lcd-sell-form input {
+        width: 100%;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 8px;
+        background: #020617;
+        color: #f8fafc;
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .lcd-search-box input {
+        min-height: 38px;
+        padding: 8px 12px 8px 36px;
+    }
+
+    .lcd-sell-form input {
+        width: 54px;
+        height: 32px;
+        padding: 4px 7px;
+        text-align: center;
+    }
+
+    .lcd-search-box input:focus,
+    .lcd-sell-form input:focus {
+        border-color: rgba(59, 130, 246, 0.78);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+        background: #030712;
+    }
+
+    .lcd-btn,
+    .lcd-icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 8px;
+        background: rgba(31, 41, 55, 0.72);
+        color: #cbd5e1;
+        cursor: pointer;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, box-shadow 160ms ease, color 160ms ease;
+    }
+
+    .lcd-btn {
+        min-height: 38px;
+        padding: 0 12px;
+        font-size: 0.86rem;
+    }
+
+    .lcd-icon-btn {
+        width: 34px;
+        height: 34px;
+        padding: 0;
+    }
+
+    .lcd-btn svg,
+    .lcd-icon-btn svg {
+        width: 16px;
+        height: 16px;
+        stroke-width: 2;
+    }
+
+    .lcd-btn:hover,
+    .lcd-icon-btn:hover {
+        transform: translateY(-1px);
+        border-color: rgba(148, 163, 184, 0.32);
+        background: rgba(51, 65, 85, 0.86);
+        color: #f8fafc;
+    }
+
+    .lcd-btn-primary,
+    .lcd-icon-blue {
+        border-color: rgba(59, 130, 246, 0.58);
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+    }
+
+    .lcd-btn-primary:hover,
+    .lcd-icon-blue:hover {
+        border-color: rgba(147, 197, 253, 0.84);
+        background: #3b82f6;
+        box-shadow: 0 12px 28px rgba(59, 130, 246, 0.25);
+    }
+
+    .lcd-icon-red {
+        border-color: rgba(248, 113, 113, 0.36);
+        background: rgba(127, 29, 29, 0.42);
+        color: #fecaca;
+    }
+
+    .lcd-icon-red:hover {
+        border-color: rgba(248, 113, 113, 0.7);
+        background: rgba(185, 28, 28, 0.72);
+        color: #fff1f2;
+        box-shadow: 0 10px 24px rgba(220, 38, 38, 0.18);
+    }
+
+    .lcd-icon-gray {
+        color: #cbd5e1;
+    }
+
+    .lcd-list-shell {
+        overflow: hidden;
+        padding: 8px;
+    }
+
+    .lcd-list-head,
+    .lcd-row {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.4fr) minmax(120px, 0.9fr) 92px minmax(96px, 0.8fr) minmax(96px, 0.8fr) minmax(220px, auto);
+        gap: 10px;
+        align-items: center;
+    }
+
+    .lcd-list-head {
+        padding: 7px 12px 9px;
+        color: #64748b;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+
+    .lcd-list {
+        display: grid;
+        gap: 7px;
+    }
+
+    .lcd-row {
+        min-height: 68px;
+        padding: 10px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.11);
+        border-radius: 8px;
+        background: #07111f;
+        transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease, background 170ms ease;
+    }
+
+    .lcd-row[hidden] {
+        display: none !important;
+    }
+
+    .lcd-row:nth-child(even) {
+        background: #132033;
+    }
+
+    .lcd-row:hover {
+        border-color: rgba(59, 130, 246, 0.46);
+        background: #172a44;
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.12), 0 14px 32px rgba(15, 23, 42, 0.32);
+        transform: translateY(-1px);
+    }
+
+    .lcd-cell {
+        min-width: 0;
+    }
+
+    .lcd-mobile-label {
+        display: none;
+    }
+
+    .lcd-brand {
+        color: #cbd5e1;
+        font-weight: 750;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .lcd-model {
+        display: inline-block;
+        max-width: 100%;
+        color: #f8fafc;
+        font-size: 0.95rem;
+        font-weight: 800;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    .lcd-model:hover {
+        color: #93c5fd;
+    }
+
+    .lcd-muted {
+        color: #64748b;
+    }
+
+    .lcd-price {
+        color: #dbeafe;
+        font-size: 0.88rem;
+        font-weight: 750;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .lcd-qty-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 62px;
+        min-height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba(34, 197, 94, 0.34);
+        border-radius: 999px;
+        background: rgba(20, 83, 45, 0.28);
+        color: #86efac;
+        font-size: 0.78rem;
+        font-weight: 850;
+        white-space: nowrap;
+    }
+
+    .lcd-qty-badge.is-empty {
+        border-color: rgba(251, 191, 36, 0.34);
+        background: rgba(113, 63, 18, 0.28);
+        color: #fde68a;
+    }
+
+    .lcd-sell-form {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding-left: 2px;
+    }
+
+    .lcd-empty {
+        display: grid;
+        place-items: center;
+        min-height: 260px;
+        padding: 34px 18px;
+        text-align: center;
+    }
+
+    .lcd-empty-icon {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 14px;
+        border: 1px solid rgba(59, 130, 246, 0.34);
+        border-radius: 8px;
+        background: rgba(59, 130, 246, 0.1);
+        color: #93c5fd;
+    }
+
+    .lcd-empty h2 {
+        margin: 0 0 8px;
+        color: #f8fafc;
+        font-size: 1.24rem;
+    }
+
+    .lcd-empty p {
+        margin: 0 auto 16px;
+        max-width: 420px;
+        color: #94a3b8;
+    }
+
+    @media (max-width: 1100px) {
+        .lcd-list-head,
+        .lcd-row {
+            grid-template-columns: minmax(170px, 1.2fr) minmax(110px, 0.9fr) 82px minmax(90px, 0.75fr) minmax(90px, 0.75fr) minmax(190px, auto);
+        }
+    }
+
+    @media (max-width: 860px) {
+        .lcd-page-header,
+        .lcd-toolbar {
+            grid-template-columns: 1fr;
+        }
+
+        .lcd-page-header {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .lcd-header-actions,
+        .lcd-filter-actions {
+            width: 100%;
+        }
+
+        .lcd-header-actions .lcd-btn,
+        .lcd-filter-actions .lcd-btn {
+            flex: 1 1 auto;
+        }
+
+        .lcd-summary {
+            grid-template-columns: 1fr;
+        }
+
+        .lcd-list-head {
+            display: none;
+        }
+
+        .lcd-list-shell {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .lcd-row,
+        .lcd-row:nth-child(even) {
+            grid-template-columns: 1fr auto;
+            gap: 8px 12px;
+            min-height: auto;
+            padding: 12px;
+            background: rgba(15, 23, 42, 0.86);
+        }
+
+        .lcd-cell {
+            display: grid;
+            gap: 3px;
+        }
+
+        .lcd-mobile-label {
+            display: block;
+            color: #64748b;
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .lcd-brand-col,
+        .lcd-model-col {
+            grid-column: 1 / -1;
+        }
+
+        .lcd-actions-col {
+            grid-column: 1 / -1;
+        }
+
+        .lcd-row-actions {
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .lcd-sell-form {
+            margin-right: auto;
+        }
+    }
+
+    @media (max-width: 560px) {
+        .lcd-search-form,
+        .lcd-filter-actions,
+        .lcd-header-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .lcd-search-form .lcd-btn,
+        .lcd-search-box,
+        .lcd-filter-actions .lcd-btn,
+        .lcd-header-actions .lcd-btn {
+            width: 100%;
+        }
+
+        .lcd-row {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .lcd-row-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+<section class="lcd-dashboard" aria-labelledby="lcd-page-title">
+    <div class="lcd-page-header">
+        <div>
+            <p class="lcd-kicker">Inventory</p>
+            <h1 id="lcd-page-title">LCD Products</h1>
+            <p class="lcd-subtitle">Compact stock control for pricing, selling, editing, and product lookup.</p>
+        </div>
+        <div class="lcd-header-actions" aria-label="Primary actions">
+            <a class="lcd-btn" href="{% url 'LCD:brand_list' %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+                Brands
+            </a>
+            <a class="lcd-btn lcd-btn-primary" href="{% url 'LCD:lcd_create' %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                Add LCD
+            </a>
+        </div>
+    </div>
+
+    <section class="lcd-summary" aria-label="Inventory summary">
+        <article class="lcd-summary-card">
+            <div>
+                <span class="lcd-summary-label">Wallet Balance</span>
+                <strong class="lcd-summary-value">{{ wallet.balance|default:"0" }}</strong>
+            </div>
+            <a class="lcd-summary-icon" href="{% url 'LCD:wallet_balance' 1 %}" title="Edit wallet" aria-label="Edit wallet balance">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3v4a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V5"/><path d="M18 12h.01"/></svg>
+            </a>
+        </article>
+        <article class="lcd-summary-card">
+            <div>
+                <span class="lcd-summary-label">Total Quantity</span>
+                <strong class="lcd-summary-value">{{ total_quantity }}</strong>
+            </div>
+            <span class="lcd-summary-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+            </span>
+        </article>
+        <article class="lcd-summary-card">
+            <div>
+                <span class="lcd-summary-label">Search Scope</span>
+                <strong class="lcd-summary-value">{% if request.GET.q %}Filtered{% else %}All Items{% endif %}</strong>
+            </div>
+            <span class="lcd-summary-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </span>
+        </article>
+    </section>
+
+    <section class="lcd-toolbar" aria-label="Search and filters">
+        <form class="lcd-search-form" method="get">
+            {% csrf_token %}
+            <label class="lcd-search-box">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search model or slug" aria-label="Search LCD">
+            </label>
+            <button class="lcd-btn lcd-btn-primary" type="submit">Search</button>
+        </form>
+        <div class="lcd-filter-actions">
+            <button class="lcd-btn" type="button" id="lcd-stock-filter" aria-pressed="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+                <span id="lcd-stock-filter-label">Zero stock</span>
+            </button>
+            {% if request.GET.q %}
+                <a class="lcd-btn" href="{% url 'LCD:lcd_list' %}">Clear</a>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if lcd %}
+        <section class="lcd-list-shell" aria-label="LCD list">
+            <div class="lcd-list-head" aria-hidden="true">
+                <span>Model</span>
+                <span>Brand</span>
+                <span>Quantity</span>
+                <span>Buy</span>
+                <span>Sell</span>
+                <span>Actions</span>
+            </div>
+
+            <div class="lcd-list" id="lcd-list">
+                {% for l in lcd %}
+                    <article class="lcd-row" data-quantity="{{ l.quantity|default:"0" }}" {% if not l.quantity %}hidden{% endif %}>
+                        <div class="lcd-cell lcd-model-col">
+                            <span class="lcd-mobile-label">Model</span>
+                            <a class="lcd-model" href="{% url 'LCD:lcd_detail' l.slug %}">{{ l.title }}</a>
+                        </div>
+
+                        <div class="lcd-cell lcd-brand-col">
+                            <span class="lcd-mobile-label">Brand</span>
+                            <span class="lcd-brand">{{ l.brand|default:"No brand" }}</span>
+                        </div>
+
+                        <div class="lcd-cell">
+                            <span class="lcd-mobile-label">Quantity</span>
+                            <span class="lcd-qty-badge {% if l.quantity %}{% else %}is-empty{% endif %}">Qty {{ l.quantity|default:"0" }}</span>
+                        </div>
+
+                        <div class="lcd-cell">
+                            <span class="lcd-mobile-label">Buy</span>
+                            <span class="lcd-price">{{ l.buy_price }}</span>
+                        </div>
+
+                        <div class="lcd-cell">
+                            <span class="lcd-mobile-label">Sell</span>
+                            <span class="lcd-price">{{ l.sell_price }}</span>
+                        </div>
+
+                        <div class="lcd-cell lcd-actions-col">
+                            <span class="lcd-mobile-label">Actions</span>
+                            <div class="lcd-row-actions">
+                                <form class="lcd-sell-form" method="post" aria-label="Sell LCD">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="lcd_slug" value="{{ l.slug }}">
+                                    <input type="number" name="quantity" value="1" min="1" aria-label="Quantity to sell">
+                                    <button class="lcd-icon-btn lcd-icon-blue" type="submit" title="Sell" aria-label="Sell {{ l.title }}">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/></svg>
+                                    </button>
+                                </form>
+                                <a class="lcd-icon-btn lcd-icon-gray" href="{% url 'LCD:lcd_detail' l.slug %}" title="Details" aria-label="Details for {{ l.title }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                                </a>
+                                <a class="lcd-icon-btn lcd-icon-blue" href="{% url 'LCD:lcd_update' l.slug %}" title="Edit" aria-label="Edit {{ l.title }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                                </a>
+                                <a class="lcd-icon-btn lcd-icon-red" href="{% url 'LCD:lcd_delete' l.slug %}" title="Delete" aria-label="Delete {{ l.title }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% else %}
+        <section class="lcd-empty">
+            <div>
+                <div class="lcd-empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"><rect width="18" height="12" x="3" y="4" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
+                </div>
+                <h2>No LCD products found</h2>
+                <p>Create a new LCD item or clear the search to browse the full inventory.</p>
+                <div class="lcd-header-actions">
+                    <a class="lcd-btn lcd-btn-primary" href="{% url 'LCD:lcd_create' %}">Add LCD</a>
+                    <a class="lcd-btn" href="{% url 'LCD:lcd_list' %}">Back Home</a>
+                </div>
+            </div>
+        </section>
     {% endif %}
 </section>
 
-{% if lcd %}
-    <section class="grid" aria-label="LCD list">
-        {% for l in lcd %}
-            <article class="product-card">
-                <div class="card-top">
-                    <div>
-                        <h2 class="card-title">
-                            <a href="{% url 'LCD:lcd_detail' l.slug %}">{{ l.title }}</a>
-                        </h2>
-                        <p class="muted">{{ l.brand|default:"No brand" }}</p>
-                    </div>
-                    <span class="badge {% if l.quantity %}badge-ok{% else %}badge-warn{% endif %}">
-                        Qty {{ l.quantity|default:"0" }}
-                    </span>
-                    <form method="post">
-                        {% csrf_token %}
-                        <input type="hidden" name="lcd_slug" value="{{ l.slug }}">
-                        <input type="number" name="quantity" value="1" min="1">
-                        <button type="submit">submit</button>
-                    </form>
-                </div>
+<script>
+    (function () {
+        var rows = Array.prototype.slice.call(document.querySelectorAll('.lcd-row'));
+        var filterButton = document.getElementById('lcd-stock-filter');
+        var filterLabel = document.getElementById('lcd-stock-filter-label');
 
-                <dl class="meta-list">
-                    <div>
-                        <dt>Buy Price</dt>
-                        <dd>{{ l.buy_price }}</dd>
-                    </div>
-                    <div>
-                        <dt>Sell Price</dt>
-                        <dd>{{ l.sell_price }}</dd>
-                    </div>
-                </dl>
+        function numericValue(value) {
+            var cleaned = String(value || '').replace(/[^\d.-]/g, '');
+            var parsed = Number(cleaned);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
 
-                <div class="actions">
-                    <a class="btn btn-primary" href="{% url 'LCD:lcd_detail' l.slug %}">Details</a>
-                    <a class="btn" href="{% url 'LCD:lcd_update' l.slug %}">Edit</a>
-                    <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' l.slug %}">Delete</a>
-                </div>
-            </article>
-        {% endfor %}
-    </section>
-{% else %}
-    <section class="panel empty-state">
-        <h2>No LCD products found</h2>
-        <p>Create a new LCD item or clear the search to browse all inventory.</p>
-        <div class="actions">
-            <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
-            <a class="btn" href="{% url 'LCD:lcd_list' %}">Back Home</a>
-        </div>
-    </section>
-{% endif %}
+        function showAvailableStock() {
+            rows.forEach(function (row) {
+                var quantity = numericValue(row.getAttribute('data-quantity')) || 0;
+                row.hidden = quantity <= 0;
+            });
+        }
+
+        function showZeroStock() {
+            rows.forEach(function (row) {
+                var quantity = numericValue(row.getAttribute('data-quantity')) || 0;
+                row.hidden = quantity !== 0;
+            });
+        }
+
+        showAvailableStock();
+
+        if (filterButton) {
+            filterButton.addEventListener('click', function () {
+                var active = filterButton.getAttribute('aria-pressed') === 'true';
+                filterButton.setAttribute('aria-pressed', String(!active));
+                filterButton.classList.toggle('lcd-btn-primary', !active);
+
+                if (active) {
+                    showAvailableStock();
+                    if (filterLabel) {
+                        filterLabel.textContent = 'Zero stock';
+                    }
+                } else {
+                    showZeroStock();
+                    if (filterLabel) {
+                        filterLabel.textContent = 'Available stock';
+                    }
+                }
+            });
+        }
+    }());
+</script>
 {% endblock %}
