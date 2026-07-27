@@ -15,5 +15,6 @@ urlpatterns = [
     path('brand/<slug:slug>/', views.BrandDetailView.as_view(), name='brand_detail'),
     path('brand_update/<slug:slug>/', views.BrandUpdateView.as_view(), name='brand_update'),
     path('wallet/<int:pk>/', views.WalletBalanceUpdateView.as_view(), name='wallet_balance'),
+    path('export/excel/', views.export_excel, name='export_excel'),
 
 ]

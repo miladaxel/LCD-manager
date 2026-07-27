@@ -2,8 +2,10 @@ from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views.generic import DetailView, ListView,CreateView,UpdateView,DeleteView
 from django.urls import reverse_lazy
+from django.http import HttpResponse
 from LCD.models import LCD, Brand, Wallet
 from django.db.models import Sum
+import openpyxl
 
 class LCDDetailView(DetailView):
     model = LCD
@@ -24,52 +26,64 @@ class LCDListView(ListView):
     model = LCD
     context_object_name = 'lcd'
     template_name = 'LCD_template/LCD_list_template.html'
+    paginate_by = 20
 
     def get_queryset(self):
         query = self.request.GET.get('q')
+        sort = self.request.GET.get('sort', '-created_at')
+        valid_sorts = {
+            'quantity': 'quantity',
+            '-quantity': '-quantity',
+            'buy_price': 'buy_price',
+            '-buy_price': '-buy_price',
+        }
+        order = valid_sorts.get(sort, '-created_at')
+        qs = LCD.objects.all()
         if query:
-            return LCD.objects.filter(Q(title__icontains=query) | Q(slug__icontains=query))
-        return LCD.objects.all()
+            qs = qs.filter(Q(title__icontains=query) | Q(slug__icontains=query))
+        return qs.order_by(order)
 
     def get_context_data(self, **kwargs):
         total_quantity = LCD.objects.aggregate(total=Sum('quantity'))['total'] or 0
         context = super().get_context_data(**kwargs)
         context['wallet'] = Wallet.objects.first()
         context['total_quantity'] = total_quantity
+        context['current_sort'] = self.request.GET.get('sort', '-created_at')
+        context['current_q'] = self.request.GET.get('q', '')
         return context
 
     def post(self, request, *args, **kwargs):
-        print(request.POST)
-        print(request.POST.get("lcd_slug"))
-        lcd_slug = request.POST.get('lcd_slug')
-        quantity = int(request.POST.get('quantity'))
-        lcd = LCD.objects.get(slug=lcd_slug)
-        lcd.sell_lcd(quantity)
+        # print(request.POST)
+        # print(request.POST.get("lcd_slug"))
+        # lcd_slug = request.POST.get('lcd_slug')
+        for lcd in LCD.objects.all():
+            quantity = (request.POST.get(f'quantity_{lcd.slug}'))
+            if quantity :
+                lcd.sell_lcd(int(quantity))
         return redirect('LCD:lcd_list')
 
 
 
 class LCDCreateView(CreateView):
     model = LCD
-    fields = ['title', 'brand', 'quantity', 'sell_price', 'buy_price']
+    fields = ['title', 'brand', 'quantity', 'first_quantity', 'sell_price', 'buy_price']
     context_object_name = 'lcd'
     template_name = 'LCD_template/lcd_create.html'
     success_url = reverse_lazy('LCD:lcd_list')
 
 
     def form_valid(self, form):
-        form.instance.user = self.request.user
         return super(LCDCreateView, self).form_valid(form)
 
 
 class LCDUpdateView(UpdateView):
     model = LCD
-    fields = ['title', 'brand', 'quantity', 'sell_price', 'buy_price']
+    fields = ['title', 'brand', 'quantity', 'first_quantity', 'sell_price', 'buy_price']
     context_object_name = 'lcd'
     template_name = 'LCD_template/lcd_update.html'
-
-    def get_success_url(self):
-        return reverse_lazy('LCD:lcd_detail', kwargs={'slug': self.object.slug})
+    success_url = reverse_lazy('LCD:lcd_list')
+    # def get_success_url(self):
+    #     return reverse_lazy('LCD:lcd_detail', kwargs={'slug': self.object.slug})
 
 
 class LCDDeleteView(DeleteView):
@@ -86,15 +100,24 @@ class BrandDetailView(DetailView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        lcd_slug = request.POST.get('lcd_slug')
-        quantity = int(request.POST.get('quantity'))
-        lcd = LCD.objects.get(slug=lcd_slug, brand=self.object)
-        lcd.sell_lcd(quantity)
+        for lcd in self.object.lcd.all():
+            quantity = request.POST.get(f'quantity_{lcd.slug}')
+            if quantity:
+                lcd.sell_lcd(int(quantity))
         return redirect('LCD:brand_detail', slug=self.object.slug)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['lcd'] = self.object.lcd.all()
+        sort = self.request.GET.get('sort', '-created_at')
+        valid_sorts = {
+            'quantity': 'quantity',
+            '-quantity': '-quantity',
+            'buy_price': 'buy_price',
+            '-buy_price': '-buy_price',
+        }
+        order = valid_sorts.get(sort, '-created_at')
+        context['lcd'] = self.object.lcd.all().order_by(order)
+        context['current_sort'] = sort
         return context
 
 
@@ -134,3 +157,31 @@ class WalletBalanceUpdateView(UpdateView):
     context_object_name = 'wallet'
     success_url = reverse_lazy('LCD:lcd_list')
     template_name = 'LCD/wallet_form.html'
+
+
+def export_excel(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "LCD"
+
+    headers = ['عنوان', 'برند', 'موجودی', 'قیمت خرید', 'قیمت فروش', 'موجودی اولیه', 'اسلاگ', 'آخرین بروزرسانی']
+    ws.append(headers)
+
+    for lcd in LCD.objects.all().iterator():
+        ws.append([
+            lcd.title,
+            str(lcd.brand) if lcd.brand else '',
+            lcd.quantity or 0,
+            lcd.buy_price,
+            lcd.sell_price,
+            lcd.first_quantity or 0,
+            lcd.slug or '',
+            lcd.updated_at.strftime('%Y-%m-%d %H:%M') if lcd.updated_at else '',
+        ])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="lcd_inventory.xlsx"'
+    wb.save(response)
+    return response

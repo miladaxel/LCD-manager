@@ -1,17 +1,17 @@
 {% extends 'LCD_template/base.html' %}
 
-{% block title %}Edit {{ lcd.title }}{% endblock %}
+{% block title %}ویرایش {{ lcd.title }}{% endblock %}
 
 {% block content %}
 <section class="page-head">
     <div>
-        <p class="eyebrow">Edit</p>
-        <h1>Edit {{ lcd.title }}</h1>
-        <p class="lead">Update product details and save changes. After saving, the app returns to this product detail page.</p>
+        <p class="eyebrow">ویرایش</p>
+        <h1>ویرایش {{ lcd.title }}</h1>
+        <p class="lead">بروزرسانی اطلاعات محصول. پس از ذخیره به صفحه جزئیات بازمی‌گردید.</p>
     </div>
     <div class="actions">
-        <a class="btn" href="{% url 'LCD:lcd_detail' lcd.slug %}">Back</a>
-        <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' lcd.slug %}">Delete</a>
+        <a class="btn" href="{% url 'LCD:lcd_detail' lcd.slug %}">بازگشت</a>
+        <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' lcd.slug %}">حذف</a>
     </div>
 </section>
 
@@ -30,8 +30,8 @@
             </div>
         {% endfor %}
         <div class="actions">
-            <button class="btn btn-primary" type="submit">Save Changes</button>
-            <a class="btn btn-muted" href="{% url 'LCD:lcd_detail' lcd.slug %}">Cancel</a>
+            <button class="btn btn-primary" type="submit">ذخیره تغییرات</button>
+            <a class="btn btn-muted" href="{% url 'LCD:lcd_detail' lcd.slug %}">انصراف</a>
         </div>
     </form>
 </section>

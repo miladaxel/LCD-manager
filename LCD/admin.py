@@ -3,8 +3,8 @@ from .models import LCD, Brand, Wallet
 
 @admin.register(LCD)
 class LCDAdmin(admin.ModelAdmin):
-    list_display = ['id','title', 'buy_price', 'sell_price', 'updated_at']
-    list_filter = ['brand','buy_price', 'sell_price','buy_price', 'updated_at']
+    list_display = ['id','title', 'buy_price', 'sell_price', 'quantity', 'first_quantity', 'updated_at']
+    list_filter = ['brand','buy_price', 'sell_price','quantity', 'first_quantity', 'updated_at']
     readonly_fields = ('created_at','updated_at')
     search_fields = ['title', 'brand__title']
 

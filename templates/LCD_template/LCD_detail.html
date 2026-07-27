@@ -3,51 +3,94 @@
 {% block title %}{{ lcd.title }}{% endblock %}
 
 {% block content %}
-<section class="page-head">
-    <div>
-        <p class="eyebrow">Product Detail</p>
+<style>
+    .detail-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+        gap: 16px;
+    }
+
+    .detail-header-text .eyebrow {
+        margin: 0 0 6px;
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .detail-header-text h1 {
+        margin: 0 0 4px;
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        line-height: 1.04;
+    }
+
+    .detail-header-text .lead {
+        margin: 0;
+        max-width: 620px;
+        color: var(--muted);
+    }
+
+    .detail-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+
+
+</style>
+
+<section class="detail-header">
+    <div class="detail-header-text">
+        <p class="eyebrow">جزئیات محصول</p>
         <h1>{{ lcd.title }}</h1>
-        <p class="lead">Review product pricing, stock, brand, and the latest update before taking action.</p>
+        <p class="lead">بررسی قیمت، موجودی، برند و آخرین بروزرسانی محصول.</p>
     </div>
-    <div class="actions">
-        <a class="btn" href="{% url 'LCD:lcd_list' %}">Back</a>
-        <a class="btn" href="{% url 'LCD:lcd_update' lcd.slug %}">Edit</a>
-        <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' lcd.slug %}">Delete</a>
+    <div class="detail-header-actions">
+        <a class="btn" href="{% url 'LCD:lcd_list' %}">بازگشت</a>
+        <a class="btn" href="{% url 'LCD:lcd_update' lcd.slug %}">ویرایش</a>
+        <a class="btn btn-danger" href="{% url 'LCD:lcd_delete' lcd.slug %}">حذف</a>
     </div>
 </section>
 
 <section class="detail-layout">
     <article class="detail-panel">
-        <div class="product-visual" aria-label="LCD preview">
+        <div class="product-visual" aria-label="پیش‌نمایش LCD">
             <div class="screen-stand"></div>
-            {# TODO: Render a real product image here if an image field is added to the LCD model/context. #}
         </div>
 
         <dl class="meta-list">
             <div>
-                <dt>Buy Price</dt>
+                <dt>قیمت خرید</dt>
                 <dd>{{ lcd.buy_price }}</dd>
             </div>
             <div>
-                <dt>Sell Price</dt>
+                <dt>قیمت فروش</dt>
                 <dd>{{ lcd.sell_price }}</dd>
             </div>
             <div>
-                <dt>Quantity</dt>
+                <dt>موجودی</dt>
                 <dd>{{ lcd.quantity|default:"0" }}</dd>
             </div>
             <div>
-                <dt>Brand</dt>
+                <dt>موجودی اولیه</dt>
+                <dd>{{ lcd.first_quantity|default:"0" }}</dd>
+            </div>
+            <div>
+                <dt>برند</dt>
                 <dd>
                     {% if lcd.brand %}
                         <a href="{% url 'LCD:brand_detail' lcd.brand.slug %}">{{ lcd.brand }}</a>
                     {% else %}
-                        No brand
+                        بدون برند
                     {% endif %}
                 </dd>
             </div>
             <div>
-                <dt>Last Updated</dt>
+                <dt>آخرین بروزرسانی</dt>
                 <dd>{{ lcd.updated_at }}</dd>
             </div>
         </dl>
@@ -55,23 +98,24 @@
 
     <aside class="side-stack">
         <section class="panel sell-box">
-            <h2>Sell Unit</h2>
-            <p class="muted">Submitting this action sells one LCD and returns you to this detail page.</p>
+            <h2>فروش واحد</h2>
+            <p class="muted">با این دکمه یک عدد LCD فروخته می‌شود.</p>
             <form method="post">
                 {% csrf_token %}
                  <input type="number" name="quantity" value="1" min="1">
-                <button class="btn btn-primary" type="submit">Sell</button>
+                <button class="btn btn-primary" type="submit">فروش</button>
             </form>
         </section>
 
         <section class="panel sell-box">
-            <h2>Quick Navigation</h2>
+            <h2>ناوبری سریع</h2>
             <div class="actions">
-                <a class="btn" href="{% url 'LCD:lcd_list' %}">Home</a>
-                <a class="btn" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
-                <a class="btn" href="{% url 'LCD:brand_list' %}">Brands</a>
+                <a class="btn" href="{% url 'LCD:lcd_list' %}">خانه</a>
+                <a class="btn" href="{% url 'LCD:lcd_create' %}">LCD جدید</a>
+                <a class="btn" href="{% url 'LCD:brand_list' %}">برندها</a>
             </div>
         </section>
     </aside>
 </section>
+
 {% endblock %}

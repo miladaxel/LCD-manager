@@ -23,7 +23,7 @@ body {
         radial-gradient(circle at top left, rgba(14, 165, 233, 0.14), transparent 32rem),
         linear-gradient(145deg, #020617 0%, #050816 46%, #000 100%);
     color: var(--text);
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: Vazirmatn, Tahomma, "Segoe UI", sans-serif;
     line-height: 1.5;
 }
 
@@ -68,10 +68,39 @@ button, input, select, textarea { font: inherit; }
     border: 1px solid rgba(56, 189, 248, 0.34);
     border-radius: var(--radius);
     background: #06101f;
-    color: var(--accent);
-    font-size: 0.78rem;
-    font-weight: 800;
+    transition: border-color 300ms, box-shadow 300ms, background 300ms;
+    cursor: pointer;
 }
+
+.brand-icon:hover {
+    border-color: rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 24px rgba(255, 0, 0, 0.18), 0 0 60px rgba(139, 0, 0, 0.08);
+    background: #0f0404;
+}
+
+.idle-layer { opacity: 1; transition: opacity 0.45s ease; }
+.mangekyo-layer { opacity: 0; transition: opacity 0.45s ease; }
+
+.brand-icon:hover .idle-layer { opacity: 0; }
+.brand-icon:hover .mangekyo-layer { opacity: 1; }
+
+.nav-spin { animation: spinSlow 6s linear infinite; transform-origin: 50% 50%; transform-box: view-box; }
+.brand-icon:hover .nav-spin { animation: spinFast 1.6s linear infinite; }
+
+.nav-spin-full { transform-origin: 50% 50%; transform-box: view-box; }
+.brand-icon:hover .nav-spin-full { animation: spinFast 1.6s linear infinite; }
+
+.center-hub { transform-origin: 50% 50%; transform-box: view-box; transform: scale(1); transition: transform 0.2s; }
+.brand-icon:hover .center-hub { transform: scale(1.4); animation: none; }
+
+.nav-glow { animation: pulseGlow 3s ease-in-out infinite; }
+.brand-icon:hover .nav-glow { opacity: 1 !important; animation: pulseGlowIntense 0.8s ease-in-out infinite; }
+
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+@keyframes spinFast { to { transform: rotate(360deg); } }
+@keyframes pulseGlow { 0%,100% { opacity: 0.15; } 50% { opacity: 0.4; } }
+@keyframes pulseGlowIntense { 0%,100% { opacity: 0.3; } 50% { opacity: 0.9; } }
+
 
 .brand-mark strong,
 .brand-mark small { display: block; }

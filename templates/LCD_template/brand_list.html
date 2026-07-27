@@ -1,58 +1,247 @@
 {% extends 'LCD_template/base.html' %}
 
-{% block title %}Brands{% endblock %}
+{% block title %}برندها{% endblock %}
 
 {% block content %}
-<section class="page-head">
-    <div>
-        <p class="eyebrow">Brands</p>
-        <h1>Brand Directory</h1>
-        <p class="lead">Find a brand and open its LCD products.</p>
-    </div>
-    <div class="actions">
-        <a class="btn" href="{% url 'LCD:lcd_list' %}">Home</a>
-        <a class="btn btn-primary" href="{% url 'LCD:brand_create' %}">Create Brand</a>
-        <a class="btn btn-primary" href="{% url 'LCD:lcd_create' %}">Create LCD</a>
-    </div>
-</section>
+<style>
+    .brand-list-page {
+        display: grid;
+        gap: 10px;
+    }
 
-<section class="panel toolbar">
-    <form class="search-form" method="get">
-        {% csrf_token %}
-        <input type="search" name="q" value="{{ request.GET.q }}" placeholder="Search brand by title or slug" aria-label="Search brand">
-        <button class="btn btn-primary" type="submit">Search</button>
-    </form>
-    {% if request.GET.q %}
-        <a class="btn btn-muted" href="{% url 'LCD:brand_list' %}">Clear</a>
+    .brand-list-page .brand-header {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .brand-list-page .brand-header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .brand-list-page .brand-toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+        align-items: center;
+        padding: 8px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.74);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.24);
+    }
+
+    .brand-list-page .brand-search {
+        display: flex;
+        gap: 8px;
+    }
+
+    .brand-list-page .brand-search input {
+        width: 100%;
+        min-height: 34px;
+        padding: 6px 10px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 6px;
+        background: #020617;
+        color: #f8fafc;
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .brand-list-page .brand-search input:focus {
+        border-color: rgba(59, 130, 246, 0.78);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+        background: #030712;
+    }
+
+    .brand-list-page .brand-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 34px;
+        padding: 0 10px;
+        border: 1px solid rgba(148, 163, 184, 0.16);
+        border-radius: 6px;
+        background: rgba(31, 41, 55, 0.72);
+        color: #cbd5e1;
+        cursor: pointer;
+        font-size: 0.82rem;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .brand-list-page .brand-btn:hover {
+        border-color: rgba(148, 163, 184, 0.32);
+        background: rgba(51, 65, 85, 0.86);
+        color: #f8fafc;
+    }
+
+    .brand-list-page .brand-btn-primary {
+        border-color: rgba(59, 130, 246, 0.58);
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+    }
+
+    .brand-list-page .brand-btn-primary:hover {
+        border-color: rgba(147, 197, 253, 0.84);
+        background: #3b82f6;
+        box-shadow: 0 12px 28px rgba(59, 130, 246, 0.25);
+    }
+
+    .brand-list-page .brand-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 8px;
+    }
+
+    .brand-list-page .brand-item {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid rgba(148, 163, 184, 0.11);
+        border-radius: 6px;
+        background: #07111f;
+        transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .brand-list-page .brand-item:hover {
+        border-color: rgba(59, 130, 246, 0.4);
+        background: #172a44;
+    }
+
+    .brand-list-page .brand-item-title {
+        margin: 0;
+        color: #f8fafc;
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+
+    .brand-list-page .brand-item-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .brand-list-page .brand-item-title a:hover {
+        color: #93c5fd;
+    }
+
+    .brand-list-page .brand-item-meta {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.78rem;
+    }
+
+    .brand-list-page .brand-item-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .brand-list-page .brand-empty {
+        display: grid;
+        place-items: center;
+        min-height: 180px;
+        padding: 24px 18px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 6px;
+        background: rgba(15, 23, 42, 0.74);
+        text-align: center;
+    }
+
+    .brand-list-page .brand-empty h2 {
+        margin: 0 0 6px;
+        color: #f8fafc;
+        font-size: 1.1rem;
+    }
+
+    .brand-list-page .brand-empty p {
+        margin: 0 auto 14px;
+        max-width: 380px;
+        color: #94a3b8;
+        font-size: 0.88rem;
+    }
+
+    @media (max-width: 640px) {
+        .brand-list-page .brand-header-actions {
+            width: 100%;
+        }
+
+        .brand-list-page .brand-header-actions .brand-btn {
+            flex: 1 1 auto;
+        }
+
+        .brand-list-page .brand-toolbar {
+            grid-template-columns: 1fr;
+        }
+
+        .brand-list-page .brand-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<section class="brand-list-page">
+    <div class="brand-header">
+        <div class="brand-header-actions">
+            <a class="brand-btn" href="{% url 'LCD:lcd_list' %}">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                خانه
+            </a>
+            <a class="brand-btn brand-btn-primary" href="{% url 'LCD:brand_create' %}">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                برند جدید
+            </a>
+            <a class="brand-btn brand-btn-primary" href="{% url 'LCD:lcd_create' %}">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                LCD جدید
+            </a>
+        </div>
+    </div>
+
+    <section class="brand-toolbar">
+        <form class="brand-search" method="get">
+            {% csrf_token %}
+            <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی برند..." aria-label="جستجوی برند">
+            <button class="brand-btn brand-btn-primary" type="submit">جستجو</button>
+        </form>
+        {% if request.GET.q %}
+            <a class="brand-btn" href="{% url 'LCD:brand_list' %}">حذف فیلتر</a>
+        {% endif %}
+    </section>
+
+    {% if brand %}
+        <div class="brand-grid">
+            {% for b in brand %}
+                <article class="brand-item">
+                    <div>
+                        <h2 class="brand-item-title">
+                            <a href="{% url 'LCD:brand_detail' b.slug %}">{{ b.title }}</a>
+                        </h2>
+                        <p class="brand-item-meta">{{ b.slug }}</p>
+                    </div>
+                    <div class="brand-item-actions">
+                        <a class="brand-btn brand-btn-primary" href="{% url 'LCD:brand_detail' b.slug %}">محصولات</a>
+                        <a class="brand-btn" href="{% url 'LCD:brand_update' b.slug %}">ویرایش</a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="brand-empty">
+            <div>
+                <h2>برندی یافت نشد</h2>
+                <p>جستجو را پاک کنید یا برند جدید بسازید.</p>
+                <div class="brand-header-actions">
+                    <a class="brand-btn" href="{% url 'LCD:brand_list' %}">بازگشت</a>
+                    <a class="brand-btn brand-btn-primary" href="{% url 'LCD:brand_create' %}">برند جدید</a>
+                </div>
+            </div>
+        </section>
     {% endif %}
 </section>
-
-{% if brand %}
-    <section class="grid" aria-label="Brand list">
-        {% for b in brand %}
-            <article class="brand-card">
-                <div>
-                    <p class="eyebrow">Brand</p>
-                    <h2 class="card-title">
-                        <a href="{% url 'LCD:brand_detail' b.slug %}">{{ b.title }}</a>
-                    </h2>
-                    <p class="muted">{{ b.slug }}</p>
-                </div>
-                <div class="actions">
-                    <a class="btn btn-primary" href="{% url 'LCD:brand_detail' b.slug %}">View Products</a>
-                    <a class="btn" href="{% url 'LCD:brand_update' b.slug %}">Edit</a>
-                </div>
-            </article>
-        {% endfor %}
-    </section>
-{% else %}
-    <section class="panel empty-state">
-        <h2>No brands found</h2>
-        <p>Clear the search or create a new brand.</p>
-        <div class="actions">
-            <a class="btn" href="{% url 'LCD:brand_list' %}">Back to Brands</a>
-            <a class="btn btn-primary" href="{% url 'LCD:brand_create' %}">Create Brand</a>
-        </div>
-    </section>
-{% endif %}
 {% endblock %}

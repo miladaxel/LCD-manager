@@ -1,17 +1,17 @@
 {% extends 'LCD_template/base.html' %}
 
-{% block title %}Create LCD{% endblock %}
+{% block title %}LCD جدید{% endblock %}
 
 {% block content %}
 <section class="page-head">
     <div>
-        <p class="eyebrow">Create</p>
-        <h1>Create LCD</h1>
-        <p class="lead">Add a new LCD product to the inventory. After saving, the app returns to the product list.</p>
+        <p class="eyebrow">ایجاد</p>
+        <h1>LCD جدید</h1>
+        <p class="lead">افزودن محصول جدید به انبار. پس از ذخیره به لیست محصولات بازمی‌گردید.</p>
     </div>
     <div class="actions">
-        <a class="btn" href="{% url 'LCD:lcd_list' %}">Back</a>
-        <a class="btn" href="{% url 'LCD:brand_list' %}">Brands</a>
+        <a class="btn" href="{% url 'LCD:lcd_list' %}">بازگشت</a>
+        <a class="btn" href="{% url 'LCD:brand_list' %}">برندها</a>
     </div>
 </section>
 
@@ -30,8 +30,8 @@
             </div>
         {% endfor %}
         <div class="actions">
-            <button class="btn btn-primary" type="submit">Save</button>
-            <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">Cancel</a>
+            <button class="btn btn-primary" type="submit">ذخیره</button>
+            <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">انصراف</a>
         </div>
     </form>
 </section>

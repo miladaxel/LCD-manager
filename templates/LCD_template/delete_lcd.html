@@ -1,30 +1,34 @@
 {% extends 'LCD_template/base.html' %}
 
-{% block title %}Delete {{ lcd.title }}{% endblock %}
+{% block title %}حذف {{ lcd.title }}{% endblock %}
 
 {% block content %}
 <section class="danger-panel">
     <div class="danger-icon">!</div>
-    <p class="eyebrow">Delete Confirmation</p>
-    <h1>Delete {{ lcd.title }}?</h1>
-    <p class="lead">This confirmation page submits the existing delete action. Use cancel to return to the product detail page.</p>
+    <p class="eyebrow">تأیید حذف</p>
+    <h1>حذف {{ lcd.title }}؟</h1>
+    <p class="lead">این عملیات غیرقابل بازگشت است. برای لغو دکمه انصراف را بزنید.</p>
 
     <dl class="meta-list">
         <div>
-            <dt>Brand</dt>
-            <dd>{{ lcd.brand|default:"No brand" }}</dd>
+            <dt>برند</dt>
+            <dd>{{ lcd.brand|default:"بدون برند" }}</dd>
         </div>
         <div>
-            <dt>Quantity</dt>
+            <dt>موجودی</dt>
             <dd>{{ lcd.quantity|default:"0" }}</dd>
+        </div>
+        <div>
+            <dt>موجودی اولیه</dt>
+            <dd>{{ lcd.first_quantity|default:"0" }}</dd>
         </div>
     </dl>
 
     <form class="actions" method="post">
         {% csrf_token %}
-        <button class="btn btn-danger" type="submit">Delete</button>
-        <a class="btn" href="{% url 'LCD:lcd_detail' lcd.slug %}">Cancel</a>
-        <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">Home</a>
+        <button class="btn btn-danger" type="submit">حذف</button>
+        <a class="btn" href="{% url 'LCD:lcd_detail' lcd.slug %}">انصراف</a>
+        <a class="btn btn-muted" href="{% url 'LCD:lcd_list' %}">خانه</a>
     </form>
 </section>
 {% endblock %}
