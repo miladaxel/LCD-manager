@@ -1,0 +1,38 @@
+{% extends 'LCD_template/base.html' %}
+
+{% block title %}ویرایش {{ brand.title }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+    <div>
+        <p class="eyebrow">ویرایش</p>
+        <h1>ویرایش {{ brand.title }}</h1>
+        <p class="lead">عنوان برند را به‌روز کنید.</p>
+    </div>
+    <div class="actions">
+        <a class="btn" href="{% url 'LCD:brand_detail' brand.slug %}">بازگشت</a>
+        <a class="btn" href="{% url 'LCD:brand_list' %}">همه برندها</a>
+    </div>
+</section>
+
+<section class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}
+                    <span class="helptext">{{ field.help_text }}</span>
+                {% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div class="actions">
+            <button class="btn btn-primary" type="submit">ذخیره تغییرات</button>
+            <a class="btn btn-muted" href="{% url 'LCD:brand_detail' brand.slug %}">انصراف</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

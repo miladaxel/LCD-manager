@@ -281,12 +281,8 @@
         transition: border-color 160ms ease, background 160ms ease;
     }
 
-    .lcd-row.even-row {
+    .lcd-row:nth-child(even) {
         background: #132033;
-    }
-
-    .lcd-row[hidden] {
-        display: none !important;
     }
 
     .lcd-row:hover {
@@ -398,6 +394,52 @@
         margin: 0 auto 16px;
         max-width: 420px;
         color: #94a3b8;
+    }
+
+    .lcd-pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.14);
+        border-radius: 8px;
+        background: rgba(15, 23, 42, 0.74);
+    }
+
+    .lcd-page-summary {
+        margin: 0;
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+
+    .lcd-page-links {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .lcd-page-links .lcd-btn {
+        min-width: 34px;
+    }
+
+    .lcd-page-links [aria-disabled="true"] {
+        opacity: 0.45;
+        cursor: default;
+        pointer-events: none;
+    }
+
+    .lcd-page-ellipsis {
+        padding: 0 4px;
+        color: #94a3b8;
+    }
+
+    .lcd-btn:focus-visible,
+    .lcd-sort-link:focus-visible {
+        outline: 2px solid #93c5fd;
+        outline-offset: 3px;
     }
 
     @media (max-width: 1100px) {
@@ -545,7 +587,7 @@
         <article class="lcd-summary-card">
             <div>
                 <span class="lcd-summary-label">وضعیت</span>
-                <strong class="lcd-summary-value">{% if request.GET.q %}فیلتر شده{% else %}همه موارد{% endif %}</strong>
+                <strong class="lcd-summary-value">{% if current_stock == 'zero' %}بدون موجودی{% else %}موجودها{% endif %}</strong>
             </div>
             <span class="lcd-summary-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -557,6 +599,7 @@
         <form class="lcd-search-form" method="get">
             {% csrf_token %}
             <input type="hidden" name="sort" value="{{ current_sort }}">
+            <input type="hidden" name="stock" value="{{ current_stock }}">
             <label class="lcd-search-box">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 <input type="search" name="q" value="{{ request.GET.q }}" placeholder="جستجوی مدل یا slug" aria-label="جستجوی LCD">
@@ -568,10 +611,10 @@
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 اکسل
             </a>
-            <button class="lcd-btn" type="button" id="lcd-stock-filter" aria-pressed="false">
+            <a class="lcd-btn{% if current_stock == 'zero' %} lcd-btn-primary{% endif %}" id="lcd-stock-filter" href="{% if current_stock == 'zero' %}{% querystring stock='available' page=None %}{% else %}{% querystring stock='zero' page=None %}{% endif %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-                <span id="lcd-stock-filter-label">صفرها</span>
-            </button>
+                <span id="lcd-stock-filter-label">{% if current_stock == 'zero' %}موجودها{% else %}صفرها{% endif %}</span>
+            </a>
             {% if request.GET.q %}
                 <a class="lcd-btn" href="{% url 'LCD:lcd_list' %}">حذف فیلتر</a>
             {% endif %}
@@ -585,10 +628,10 @@
             <div class="lcd-list-head" aria-hidden="true">
                 <span>مدل</span>
                 <span>برند</span>
-                <a class="lcd-sort-link" href="?{% if current_sort == 'quantity' %}sort=-quantity{% else %}sort=quantity{% endif %}{% if current_q %}&q={{ current_q }}{% endif %}">
+                <a class="lcd-sort-link" href="{% if current_sort == 'quantity' %}{% querystring sort='-quantity' page=None %}{% else %}{% querystring sort='quantity' page=None %}{% endif %}">
                     موجودی {% if current_sort == 'quantity' %}▲{% elif current_sort == '-quantity' %}▼{% endif %}
                 </a>
-                <a class="lcd-sort-link" href="?{% if current_sort == 'buy_price' %}sort=-buy_price{% else %}sort=buy_price{% endif %}{% if current_q %}&q={{ current_q }}{% endif %}">
+                <a class="lcd-sort-link" href="{% if current_sort == 'buy_price' %}{% querystring sort='-buy_price' page=None %}{% else %}{% querystring sort='buy_price' page=None %}{% endif %}">
                     خرید {% if current_sort == 'buy_price' %}▲{% elif current_sort == '-buy_price' %}▼{% endif %}
                 </a>
                 <span>اولیه</span>
@@ -597,7 +640,7 @@
 
             <div class="lcd-list" id="lcd-list">
                 {% for l in lcd %}
-                    <article class="lcd-row" data-quantity="{{ l.quantity|default:"0" }}" {% if not l.quantity %}hidden{% endif %}>
+                    <article class="lcd-row">
                         <div class="lcd-cell lcd-model-col">
                             <span class="lcd-mobile-label">مدل</span>
                             <a class="lcd-model" href="{% url 'LCD:lcd_detail' l.slug %}">{{ l.title }}</a>
@@ -627,7 +670,7 @@
                             <span class="lcd-mobile-label">عملیات</span>
                             <div class="lcd-row-actions">
                                 <div class="lcd-sell-form">
-                                    <input type="number" name="quantity_{{ l.slug }}" value="{{ l.quantity }}" aria-label="تعداد برای {{ l.title }}">
+                                    <input type="number" name="quantity_{{ l.slug }}" value="{{ l.quantity|default_if_none:'0' }}" min="0" max="2147483647" step="1" required aria-label="تعداد برای {{ l.title }}">
                                 </div>
                                 <a class="lcd-icon-btn lcd-icon-gray" href="{% url 'LCD:lcd_detail' l.slug %}" title="جزئیات" aria-label="جزئیات {{ l.title }}">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
@@ -652,6 +695,32 @@
             </div>
         </section>
         </form>
+        <div class="lcd-pagination">
+            <p class="lcd-page-summary">نمایش <bdi>{{ page_obj.start_index }}–{{ page_obj.end_index }}</bdi> از <bdi>{{ paginator.count }}</bdi> محصول</p>
+            {% if is_paginated %}
+                <nav class="lcd-page-links" aria-label="صفحه‌بندی محصولات">
+                    {% if page_obj.has_previous %}
+                        <a class="lcd-btn" rel="prev" href="{% querystring page=page_obj.previous_page_number %}">قبلی</a>
+                    {% else %}
+                        <span class="lcd-btn" aria-disabled="true">قبلی</span>
+                    {% endif %}
+                    {% for number in page_numbers %}
+                        {% if number == paginator.ELLIPSIS %}
+                            <span class="lcd-page-ellipsis">{{ number }}</span>
+                        {% elif number == page_obj.number %}
+                            <span class="lcd-btn lcd-btn-primary" aria-current="page" aria-label="صفحهٔ {{ number }}">{{ number }}</span>
+                        {% else %}
+                            <a class="lcd-btn" aria-label="صفحهٔ {{ number }}" href="{% querystring page=number %}">{{ number }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <a class="lcd-btn" rel="next" href="{% querystring page=page_obj.next_page_number %}">بعدی</a>
+                    {% else %}
+                        <span class="lcd-btn" aria-disabled="true">بعدی</span>
+                    {% endif %}
+                </nav>
+            {% endif %}
+        </div>
     {% else %}
         <section class="lcd-empty">
             <div>
@@ -659,7 +728,7 @@
                     <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor"><rect width="18" height="12" x="3" y="4" rx="2"/><path d="M8 20h8"/><path d="M12 16v4"/></svg>
                 </div>
                 <h2>محصولی یافت نشد</h2>
-                <p>محصول جدید اضافه کنید یا جستجو را پاک کنید.</p>
+                <p>{% if current_stock == 'zero' %}محصول بدون موجودی پیدا نشد. فیلتر موجودی یا جستجو را تغییر دهید.{% else %}محصول دارای موجودی پیدا نشد. محصول جدید اضافه کنید یا فیلتر موجودی و جستجو را تغییر دهید.{% endif %}</p>
                 <div class="lcd-header-actions">
                     <a class="lcd-btn lcd-btn-primary" href="{% url 'LCD:lcd_create' %}">LCD جدید</a>
                     <a class="lcd-btn" href="{% url 'LCD:lcd_list' %}">بازگشت</a>
@@ -669,71 +738,4 @@
     {% endif %}
 </section>
 
-<script>
-    (function () {
-        var rows = Array.prototype.slice.call(document.querySelectorAll('.lcd-row'));
-        var filterButton = document.getElementById('lcd-stock-filter');
-        var filterLabel = document.getElementById('lcd-stock-filter-label');
-
-        function numericValue(value) {
-            var cleaned = String(value || '').replace(/[^\d.-]/g, '');
-            var parsed = Number(cleaned);
-            return Number.isFinite(parsed) ? parsed : null;
-        }
-
-        function updateRowColors() {
-            rows.forEach(function (row) {
-                row.classList.remove("even-row");
-            });
-
-            var visibleRows = rows.filter(function (row) {
-                return !row.hidden;
-            });
-
-            visibleRows.forEach(function (row, index) {
-                if (index % 2 === 1) {
-                    row.classList.add("even-row");
-                }
-            });
-        }
-
-        function showAvailableStock() {
-            rows.forEach(function (row) {
-                var quantity = numericValue(row.getAttribute('data-quantity')) || 0;
-                row.hidden = quantity <= 0;
-            });
-            updateRowColors();
-        }
-
-        function showZeroStock() {
-            rows.forEach(function (row) {
-                var quantity = numericValue(row.getAttribute('data-quantity')) || 0;
-                row.hidden = quantity !== 0;
-            });
-            updateRowColors();
-        }
-
-        showAvailableStock();
-
-        if (filterButton) {
-            filterButton.addEventListener('click', function () {
-                var active = filterButton.getAttribute('aria-pressed') === 'true';
-                filterButton.setAttribute('aria-pressed', String(!active));
-                filterButton.classList.toggle('lcd-btn-primary', !active);
-
-                if (active) {
-                    showAvailableStock();
-                    if (filterLabel) {
-                        filterLabel.textContent = 'صفرها';
-                    }
-                } else {
-                    showZeroStock();
-                    if (filterLabel) {
-                        filterLabel.textContent = 'موجودها';
-                    }
-                }
-            });
-        }
-    }());
-</script>
 {% endblock %}

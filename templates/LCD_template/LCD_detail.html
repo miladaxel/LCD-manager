@@ -102,7 +102,7 @@
             <p class="muted">با این دکمه یک عدد LCD فروخته می‌شود.</p>
             <form method="post">
                 {% csrf_token %}
-                 <input type="number" name="quantity" value="1" min="1">
+                 <input type="number" name="quantity" value="1" min="1" max="2147483647" step="1" required aria-label="تعداد">
                 <button class="btn btn-primary" type="submit">فروش</button>
             </form>
         </section>
